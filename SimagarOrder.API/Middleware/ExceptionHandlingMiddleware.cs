@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using SimagarOrder.Domain.Entities;
+using SimagarOrder.Domain.Exceptions;
 using System.Net;
 
 namespace SimagarOrder.API.Middleware;

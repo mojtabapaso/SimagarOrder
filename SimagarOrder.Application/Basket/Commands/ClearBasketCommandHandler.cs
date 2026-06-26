@@ -5,19 +5,40 @@ using SimagarOrder.Infrastructure.Persistence.Repositories;
 
 namespace SimagarOrder.Application.Basket.Commands;
 
-public class ClearBasketCommandHandler(IBasketRepository basketRepository, IMediator mediator) 
+/// <summary>
+/// هندلر مربوط به پاک کردن سبد خرید کاربر
+/// </summary>
+public class ClearBasketCommandHandler(
+    IBasketRepository basketRepository,
+    IMediator mediator)
     : IRequestHandler<ClearBasketCommand, ServiceResult>
 {
-    public async Task<ServiceResult> Handle(ClearBasketCommand request, CancellationToken cancellationToken)
+    public async Task<ServiceResult> Handle(
+        ClearBasketCommand request,
+        CancellationToken cancellationToken)
     {
-        //اینجا میشد فقط خود سبد رو پاک کرد و منطقی روی مقداریش نداشت 
-        var basket = await basketRepository.GetBasketWithAllItemsByUserIdAsync(request.UserId);
+        // دریافت سبد خرید کاربر به همراه تمامی آیتم‌های آن
+        // برای حذف آیتم‌ها باید آن‌ها نیز بارگذاری شده باشند.
+        var basket = await basketRepository
+            .GetBasketWithAllItemsByUserIdAsync(request.UserId);
+
+        // در صورت نبودن سبد خرید، نتیجه NotFound برگردانده می‌شود.
         if (basket is null)
         {
             return ServiceResult.NotFound("basket is not found");
         }
+
+        // پاک کردن تمامی آیتم‌های سبد خرید.
+        // از آنجایی که منطق حذف آیتم‌ها در Domain قرار دارد،
+        // این عملیات از طریق متد دامنه انجام می‌شود.
         basket.ClearBasket();
-        await mediator.Send(new RestoreCacheBasketEvent(request.UserId), cancellationToken);
+
+        // بروزرسانی کش سبد خرید پس از اعمال تغییرات
+        await mediator.Send(
+            new RestoreCacheBasketEvent(request.UserId),
+            cancellationToken);
+
+        // بازگرداندن نتیجه موفق عملیات
         return ServiceResult.Success();
     }
 }

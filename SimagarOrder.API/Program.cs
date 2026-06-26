@@ -1,5 +1,4 @@
 using FluentValidation;
-using Hangfire;
 using MassTransit;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -14,27 +13,64 @@ using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+// ------------------------------------------------------------
+// ASP.NET Core Services
+// ------------------------------------------------------------
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-// - - - - 
+
+
+// ------------------------------------------------------------
+// Database
+// ------------------------------------------------------------
 builder.Services.AddDbContext<DbContextBasket>(options =>
 {
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("SqlServer"));
 });
-builder.Services.AddMediatR(cfg =>
-{
-    cfg.RegisterServicesFromAssemblyContaining<
-        ApplicationAssemblyReference>();
-});
+
 builder.Services.AddScoped<IUnitOfWork>(sp =>
     sp.GetRequiredService<DbContextBasket>());
+
 builder.Services.AddScoped<IBasketRepository, BasketRepository>();
 
+
+// ------------------------------------------------------------
+// MediatR
+// ------------------------------------------------------------
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssemblyContaining<ApplicationAssemblyReference>();
+});
+
+// Command / Query Dispatcher Wrappers
+builder.Services.AddScoped<ICommandDispatcher, CommandDispatcher>();
+builder.Services.AddScoped<IQueryDispatcher, QueryDispatcher>();
+
+
+// ------------------------------------------------------------
+// FluentValidation
+// ------------------------------------------------------------
+builder.Services.AddValidatorsFromAssemblyContaining<ApplicationAssemblyReference>();
+
+builder.Services.AddTransient(
+    typeof(IPipelineBehavior<,>),
+    typeof(ValidationBehavior<,>));
+
+builder.Services.AddTransient(
+    typeof(IPipelineBehavior<,>),
+    typeof(TransactionBehavior<,>));
+
+
+// ------------------------------------------------------------
+// RabbitMQ (MassTransit)
+// ------------------------------------------------------------
 builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<BasketEventConsumer>();
+
     x.UsingRabbitMq((context, cfg) =>
     {
         cfg.Host(
@@ -49,42 +85,49 @@ builder.Services.AddMassTransit(x =>
     });
 });
 
-//redis
+builder.Services.AddScoped<IBasketEventPublisher, BasketEventPublisher>();
+
+
+// ------------------------------------------------------------
+// Redis
+// ------------------------------------------------------------
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 {
     var configuration = builder.Configuration.GetConnectionString("Redis");
     return ConnectionMultiplexer.Connect(configuration);
 });
 
-//builder.Services.AddHangfire(configuration => configuration
-//           .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
-//           .UseSimpleAssemblyNameTypeSerializer()
-//           .UseRecommendedSerializerSettings()
-//           .UseSqlServerStorage(builder.Configuration.GetConnectionString("SqlServer")));
-//builder.Services.AddHangfireServer();
-
 builder.Services.AddScoped<IBasketCacheService, BasketCacheService>();
-//MediatR Wrapper
-builder.Services.AddScoped<ICommandDispatcher, CommandDispatcher>();
-builder.Services.AddScoped<IQueryDispatcher, QueryDispatcher>();
 
-builder.Services.AddValidatorsFromAssemblyContaining<ApplicationAssemblyReference>();
 
-builder.Services.AddTransient(
-    typeof(IPipelineBehavior<,>),
-    typeof(ValidationBehavior<,>));
+// ------------------------------------------------------------
+// Hangfire (Currently Disabled)
+// ------------------------------------------------------------
+// builder.Services.AddHangfire(configuration => configuration
+//     .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+//     .UseSimpleAssemblyNameTypeSerializer()
+//     .UseRecommendedSerializerSettings()
+//     .UseSqlServerStorage(
+//         builder.Configuration.GetConnectionString("SqlServer")));
 
-builder.Services.AddTransient(
-    typeof(IPipelineBehavior<,>),
-    typeof(TransactionBehavior<,>));
-builder.Services.AddScoped<IBasketEventPublisher, BasketEventPublisher>();
+// builder.Services.AddHangfireServer();
+
+
+// ------------------------------------------------------------
+// Build Application
+// ------------------------------------------------------------
 var app = builder.Build();
 
+
+// ------------------------------------------------------------
+// HTTP Request Pipeline
+// ------------------------------------------------------------
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseHttpsRedirection();
