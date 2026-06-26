@@ -1,0 +1,6 @@
+@SimagarOrder.API_HostAddress = http://localhost:5115
+
+GET {{SimagarOrder.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

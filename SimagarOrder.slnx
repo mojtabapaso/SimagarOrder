@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="SimagarOrder.API/SimagarOrder.API.csproj" />
+  <Project Path="SimagarOrder.Application/SimagarOrder.Application.csproj" />
+  <Project Path="SimagarOrder.Domain/SimagarOrder.Domain.csproj" />
+  <Project Path="SimagarOrder.Infrastructure/SimagarOrder.Infrastructure.csproj" />
+</Solution>
