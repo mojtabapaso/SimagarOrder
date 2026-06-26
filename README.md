@@ -5,6 +5,7 @@
 
 طراحی ساختار پروژه بر اساس Clean Architecture و تفکیک لایه‌های Domain، Application، Infrastructure و API.
 پیاده‌سازی الگوی CQRS و جداسازی کامل Command و Queryها.
+
 طراحی موجودیت Basket و پیاده‌سازی منطق دامنه مثل اضافه کردن کالا، حذف کالا، تغییر تعداد و خالی کردن سبد خرید.
 پیاده‌سازی Repositoryها و ارتباط با دیتابیس از طریق Entity Framework Core.
 طراحی ServiceResult برای برگرداندن پاسخ‌های یکپارچه از سرویس‌ها و مدیریت خطاها.
