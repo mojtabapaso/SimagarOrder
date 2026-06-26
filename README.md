@@ -82,7 +82,7 @@
 * پیاده‌سازی عملیات **Asynchronous** در لایه‌های Application و Infrastructure
 
 ## Docker
-
+ 
 * Dockerize کردن پروژه
 * ایجاد **Dockerfile**
 * ایجاد **docker-compose**
