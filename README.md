@@ -45,7 +45,7 @@
 * اعتبارسنجی Commandها با استفاده از **FluentValidation**
 * طراحی و پیاده‌سازی **Domain Exception**
 * مدیریت متمرکز خطاها
-* طراحی و پیاده‌سازی **ServiceResult** و **ServiceResult<T>**
+* طراحی و پیاده‌سازی **ServiceResult** 
 * استانداردسازی خروجی API با استفاده از **ToApiResult**
 
 ## Persistence
